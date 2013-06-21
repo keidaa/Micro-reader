@@ -1,9 +1,11 @@
-import feedparser, json, urllib, math
+import feedparser, json, urllib, math, bottle
+from beaker.middleware import SessionMiddleware
 from urlparse import urlunsplit, urlunparse
 from functools import partial
 from bottle import Request, route, run, view, template, install, redirect, hook, request, response, abort, static_file, JSONPlugin
 from models import *
 from mimerender import *
+from cork import Cork
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -21,9 +23,10 @@ def is_active(url):
 	valid_keys = ('starred')
 	valid_params = dict((k,v) for k, v in params.items() if k in valid_keys)
 	fullpath = urlunsplit((None, None, request.path, urllib.urlencode(valid_params), None))
-	#fullpath = request.path + ('?' + request.query_string if request.query_string else '')
 	return 'active' if fullpath == url else ''
 
+
+auth = Cork('auth')
 mimerender = BottleMimeRender(global_charset = 'utf8')
 
 render_json = lambda **args: json.dumps(args, cls=CustomJsonEncoder)
@@ -45,6 +48,9 @@ def index():
 @route('/items', method = 'GET')
 @mimerender(json = render_json, html = render_html('index'))
 def items(id = None):
+	
+	auth.require(fail_redirect='/login')
+	
 	valid_params = {'1' : True, '0' : False}
 	starred = valid_params.get(request.query.getone('starred'))
 	read = valid_params.get(request.query.getone('read'))
@@ -177,9 +183,34 @@ def server_static(filename):
 @route('/favicon.ico')
 def get_favicon():
     return server_static('favicon.ico')
+    
+@route('/login', method = 'POST')
+def login():
+	username = request.POST.get('username', '')
+	password = request.POST.get('password', '')
+	auth.login(username, password, success_redirect='/', fail_redirect='/login')
+
+@route('/login', method = 'GET')
+@view('login')
+def login_form():
+	return {}
+	
+@route('/logout')
+def logout():
+    auth.current_user.logout(redirect='/login')
+
+session_opts = {
+    'session.type': 'file',
+    'session.data_dir': './session/',
+    'session.auto': True
+}
+app = SessionMiddleware(bottle.app(), session_opts)
+
+def main():
+	bottle.run(app=app, host='0.0.0.0', port=3000, reloader = True, debug = True)
 
 if __name__ == '__main__':
 	try:
-		from mod_wsgi import version
+		from mod_wsgi import version		
 	except:
-		run(host='0.0.0.0', port=3000, reloader = True, debug = True)
+		main()

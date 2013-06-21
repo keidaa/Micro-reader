@@ -5,5 +5,5 @@ os.chdir(os.path.dirname(__file__))
 
 import microreader
 
-application = bottle.default_app()
+application = microreader.app
 
