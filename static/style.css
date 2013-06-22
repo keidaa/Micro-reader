@@ -30,9 +30,13 @@
 		a:hover
 		{
 			color: #0099FF;
+		}
+		fieldset {
+			border: 1px solid #e1e1e1;			
 		}		
-		[type=text] {
-			border: 1px solid #e1e1e1
+		[type=text], [type=password] {
+			border: 1px solid #e1e1e1;
+			display: block;
 		}
 		#content {
 			overflow: hidden;	

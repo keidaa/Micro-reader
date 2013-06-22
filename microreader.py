@@ -197,7 +197,7 @@ def login_form():
 	
 @route('/logout')
 def logout():
-    auth.current_user.logout(redirect='/login')
+    auth.logout()
 
 session_opts = {
     'session.type': 'file',
