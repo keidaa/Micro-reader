@@ -39,29 +39,7 @@
 					{{channel.title}}
 					<span class = "not-important">({{channel.unread_count()}})</span>					
 				</a>
-				<ul class = "nav-dropdown">
-				<a href = "#"><i class = "icon-caret-down"></i></a>
-				<ul class= "dropdown popup">
-					<li>
-						<a href = "/channels/{{channel.id}}/update" class= "update">
-						<i class = "icon-arrow-circle"></i>
-						Update
-						</a>
-					</li>
-					<li>
-						<a href = "/channels/{{channel.id}}/edit" class = "edit">
-							<i class = "icon-pen"></i>
-							Edit
-						</a>
-					</li>
-					<li>
-						<a href = "/channels/{{channel.id}}/delete" class = "delete">
-							<i class = "icon-cross"></i>
-							Delete
-						</a>
-					</li>
-				</ul>
-				</ul>								
+				<a href = "/channels/{{channel.id}}/edit" class = "nav-dropdown"><i class = "icon-caret-down"></i></a>											
 			</li>						
 		%end
 		</ul>	
@@ -116,6 +94,23 @@
 		
 	$(document).ready(function()
 	{	
+		$('.item .mark-read').click(function(event)
+		{
+			var item = $(this).parent().parent();
+			item.toggleClass('read');
+			event.preventDefault();			
+			$.ajax({
+				url: $(this).attr('href'),				
+				data: '{"read" : ' + item.hasClass('read') + '}',				
+				contentType: "application/json; charset=utf-8",
+				type: 'PATCH',
+				error: function()
+				{					
+					item.removeClass('read');
+				}							
+			});
+		});
+	
 		$('.mark-star').click(function(event)
 		{
 			event.preventDefault();
@@ -150,7 +145,7 @@
 			});			
 		});
 		
-		$('.edit').click(function(event)
+		$('.nav-dropdown').click(function(event)
 		{
 			event.preventDefault();
 			var l = $(this);			
@@ -190,7 +185,8 @@
 			}
 		});
 		
-		$('.link').click(function(e) {
+		$('.link').mousedown(function(e) {			
+			if (e.which <= 2) {
 			e.preventDefault();			
 			var item = $(this).parent().parent();
 			item.addClass('read');					
@@ -205,6 +201,7 @@
 				}							
 			});
 			window.open($(this).attr('href'));
+			}
 		});
 		
 		$('.nav-dropdown').click(function() {

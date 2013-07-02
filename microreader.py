@@ -1,12 +1,13 @@
-import feedparser, json, urllib, math, bottle
-from beaker.middleware import SessionMiddleware
-from urlparse import urlunsplit, urlunparse
+import feedparser, json, urllib, math
+try: from urllib.parse import urlencode, urlunsplit
+except ImportError:
+		from urlparse import urlunsplit
+		from urllib import urlencode
 from functools import partial
 from bottle import Request, auth_basic, route, run, view, template, install, redirect, hook, request, response, abort, static_file, JSONPlugin
 from models import *
 from mimerender import *
 from cork import Cork
-
 
 class CustomJsonEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -22,7 +23,7 @@ def is_active(url):
 	params = request.query
 	valid_keys = ('starred')
 	valid_params = dict((k,v) for k, v in params.items() if k in valid_keys)
-	fullpath = urlunsplit((None, None, request.path, urllib.urlencode(valid_params), None))
+	fullpath = urlunsplit(('', '', request.path, urlencode(valid_params), ''))
 	return 'active' if fullpath == url else ''
 
 mimerender = BottleMimeRender(global_charset = 'utf8')
@@ -88,9 +89,9 @@ def items(id = None):
 	
 	params = request.query
 	params['page'] = page + 1
-	out['next'] = urlunsplit((None, None, request.path, urllib.urlencode(params), None)) if page <= math.ceil(total_count / count) else None
+	out['next'] = urlunsplit(('', '', request.path, urlencode(params), '')) if page <= math.ceil(total_count / count) else None
 	params['page'] = page - 1 if page > 1 else 1
-	out['prev'] = urlunsplit((None, None, request.path, urllib.urlencode(params), None)) if page > 1 else None
+	out['prev'] = urlunsplit(('', '', request.path, urlencode(params), '')) if page > 1 else None
 	
 	return out
 		
