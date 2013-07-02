@@ -2,7 +2,7 @@ import feedparser, json, urllib, math, bottle
 from beaker.middleware import SessionMiddleware
 from urlparse import urlunsplit, urlunparse
 from functools import partial
-from bottle import Request, route, run, view, template, install, redirect, hook, request, response, abort, static_file, JSONPlugin
+from bottle import Request, auth_basic, route, run, view, template, install, redirect, hook, request, response, abort, static_file, JSONPlugin
 from models import *
 from mimerender import *
 from cork import Cork
@@ -25,12 +25,11 @@ def is_active(url):
 	fullpath = urlunsplit((None, None, request.path, urllib.urlencode(valid_params), None))
 	return 'active' if fullpath == url else ''
 
-
-auth = Cork('auth')
 mimerender = BottleMimeRender(global_charset = 'utf8')
-
 render_json = lambda **args: json.dumps(args, cls=CustomJsonEncoder)
 render_html = lambda tpl='index', **args: lambda **args: template(tpl, channels = Channel.select(), is_active = is_active, **args)
+	
+cork = Cork('auth')
 
 @hook('before_request')
 def connect():
@@ -44,13 +43,28 @@ def disconnect():
 def index():
 	redirect('/items')
 
+def auth():
+    def decorator(func):
+        def wrapper(*a, **ka):
+			
+            return auth_basic(cork.login)
+        return wrapper
+    return decorator
+
+
+def check(username, password):
+	return auth.login(username, password)
+
 @route('/channels/<id:int>/items', method = 'GET')	
 @route('/items', method = 'GET')
+@auth()
 @mimerender(json = render_json, html = render_html('index'))
 def items(id = None):
 	
-	auth.require(fail_redirect='/login')
-	
+	#if not request.json :
+		#auth.require(fail_redirect='/login')
+	#else:
+		
 	valid_params = {'1' : True, '0' : False}
 	starred = valid_params.get(request.query.getone('starred'))
 	read = valid_params.get(request.query.getone('read'))
