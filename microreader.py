@@ -70,12 +70,9 @@ def items(id = None):
 	
 	out = { 'items' : list(query.order_by(Item.updated.desc()).limit(count))}
 	
-	channels = Channel.select()
-	for c in channels:
-		c.new = c.has_new()
+	#channels = Channel.select()
 	
-	if channel : 
-		Item.update(new = False).where(Item.channel == channel).execute()		
+	out['channels'] = Channel.select()
 	
 	params = request.query
 	params['page'] = page + 1
@@ -86,7 +83,11 @@ def items(id = None):
 	if (request.get_header('Accept') == 'application/json'):
 		return out
 	else:
-		return template('index', out, is_active = is_active, channels = channels)
+		tpl =  template('index', out, is_active = is_active)
+		if channel :
+			Channel.update(has_new = False).where(Channel.id == channel).execute()
+			Item.update(new = False).where(Item.channel == channel).execute()
+		return tpl
 		
 @route('/items/<id:int>', method = 'GET')
 def item(id):

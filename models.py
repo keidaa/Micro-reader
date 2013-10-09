@@ -18,10 +18,8 @@ class Channel(BaseModel):
 	fetched = DateTimeField(default = datetime.now())
 	url = TextField()
 	icon = TextField(default = '/static/feed.png')
-	
-	def has_new(self):
-		return True if (self.items.where(Item.new == True).count() > 0) else False
-					
+	has_new = BooleanField(default = False)	
+				
 	def unread_count(self):
 		return self.items.where(Item.read == False).count()
 		
@@ -42,6 +40,7 @@ class Channel(BaseModel):
 								  url = unicode(entry.get('link', 'No url')), channel = self)
 				if not Item.select().where(Item.url == entry.link).exists():						
 					Item.create(**parameters)
+					self.has_new = True
 				else:
 					Item.update(**parameters).where(Item.url == entry.link).execute()			
 			

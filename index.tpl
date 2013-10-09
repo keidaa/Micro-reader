@@ -33,7 +33,7 @@
 		<ul class = "channels">			
 		%for channel in channels:		
 			<li>			
-				<a href = "/channels/{{channel.id}}/items" class = "nav-link {{is_active("/channels/" + str(channel.id) + "/items")}} {{'has-new' if channel.new else ''}}">
+				<a href = "/channels/{{channel.id}}/items" class = "nav-link {{is_active("/channels/" + str(channel.id) + "/items")}} {{'has-new' if channel.has_new else ''}}">
 					<i class = "icon-feed"></i>
 					{{channel.title}}
 					<span class = "not-important">({{channel.unread_count()}})</span>					
